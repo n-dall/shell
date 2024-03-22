@@ -36,7 +36,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     // Step 2: Creating the Window
     hwnd = CreateWindowEx(
-        WS_EX_CLIENTEDGE, "Shell", "Custom Shell", WS_OVERLAPPEDWINDOW,
+        WS_EX_CLIENTEDGE, "Shell", "Shell", WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,
         CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, NULL, NULL, hInstance, NULL);
 
     if (hwnd == NULL) {
@@ -68,6 +68,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     SECURITY_ATTRIBUTES sa;
     struct tagRECT rectClient = {.bottom = 0, .left = 0, .right = 0, .top = 0};
 
+
     switch (msg) {
         case WM_CREATE:
             GetClientRect(hwnd, &rectClient);
@@ -97,9 +98,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessage(hwndOutput, EM_REPLACESEL, 0, (LPARAM)formatBuffer);
                 SendMessage(hwndOutput, EM_REPLACESEL, 0, (LPARAM)"\r\n");
 
-                // Call execute.c on buffer
+                // Execute command
+                FILE *fp;
+                char result[40];
+                strcat(buffer, " 2>&1");
 
-                
+                fp = popen(buffer, "r");
+
+                while (fgets(result, sizeof(result), fp) != NULL) {
+                    SendMessage(hwndOutput, EM_REPLACESEL, 0, (LPARAM)result);
+                    SendMessage(hwndOutput, EM_REPLACESEL, 0, (LPARAM)"\r\n");
+                }
+
+                pclose(fp);
             }
             break;
 
